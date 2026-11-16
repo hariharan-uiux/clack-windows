@@ -12,6 +12,7 @@ npmRebuild: false
 files:
   - dist/**/*
   - electron/**/*
+  - build/*.png
   - package.json
   - '!**/*.map'
 
