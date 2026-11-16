@@ -68,7 +68,9 @@ Executed on this machine (Linux arm64, headless X server):
 - 100 WAVs decoded by the engine (`100 samples` in the UI).
 - Clicking a switch card played a sample: the output meter peaked at 0.73, proving the graph reaches the device.
 - Settings round-trip through IPC and persist to disk.
-- `electron-builder --win --x64 --dir` produced `release/win-unpacked/Clack.exe` with `app.asar` (main + preload + renderer), all 100 WAVs under `resources/sounds`, and `uiohook-napi` prebuilds unpacked for win32-x64/arm64.
+- `electron-builder --win --x64 --dir` produced `release/win-unpacked/Clack.exe` with `app.asar` (main + preload + renderer), all 100 WAVs under `resources/sounds`, and `uiohook-napi` prebuilds unpacked for win32-x64/arm64. `build/icon.png` and `build/tray.png` are inside the asar.
+
+**Built on Windows (CI):** `.github/workflows/build-windows.yml` ran on `windows-latest` for both commits and finished green, producing the NSIS installer artifact (`Clack-<version>-<arch>-setup.exe`, x64 + arm64). Download: repository → Actions → latest "Build Windows" run → artifact `clack-windows`.
 
 **Not verified here:**
 
