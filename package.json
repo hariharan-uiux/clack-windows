@@ -1,0 +1,35 @@
+{
+  "name": "clack-windows",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mechanical keyboard sounds for Windows. Global key capture, spatial audio, per-key sample variation.",
+  "main": "electron/main.cjs",
+  "author": "HariHaran <haridhina3051@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently -k \"vite --port 5173\" \"wait-on tcp:127.0.0.1:5173 && cross-env CLACK_DEV_SERVER=http://127.0.0.1:5173 electron .\"",
+    "build": "tsc --noEmit && vite build",
+    "start": "npm run build && electron .",
+    "icons": "node scripts/gen-icons.mjs",
+    "preview": "npm run build && electron scripts/preview.cjs",
+    "dist": "npm run build && electron-builder --win",
+    "dist:dir": "npm run build && electron-builder --win --dir"
+  },
+  "dependencies": {
+    "uiohook-napi": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "wait-on": "^8.0.1"
+  }
+}

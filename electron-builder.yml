@@ -1,0 +1,46 @@
+appId: studio.qudra.clack
+productName: Clack
+copyright: Copyright © 2026 HariHaran
+
+directories:
+  buildResources: build
+  output: release
+
+# uiohook-napi ships N-API prebuilds for win32 x64/arm64, so no native rebuild is needed.
+npmRebuild: false
+
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+  - '!**/*.map'
+
+extraResources:
+  - from: sounds
+    to: sounds
+    filter:
+      - '**/*.wav'
+
+asarUnpack:
+  - '**/node_modules/uiohook-napi/**'
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+        - arm64
+  icon: build/icon.png
+  artifactName: Clack-${version}-${arch}-setup.${ext}
+  executableName: Clack
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Clack
+  deleteAppDataOnUninstall: false
+
+compression: normal
