@@ -44,6 +44,26 @@ npm run dist:dir     # unpacked app, no installer
 
 Windows builds also run in CI (`.github/workflows/build-windows.yml`): every push to `main` produces a downloadable installer artifact.
 
+## Cut a release
+
+Installer builds and publishing are automated:
+
+1. Bump `version` in `package.json` (for example `1.0.1`).
+2. Commit and push to `main`.
+3. Tag and push: `git tag -a v1.0.1 -m "Clack 1.0.1" && git push origin v1.0.1`.
+
+The tag build produces three files and publishes them onto the matching GitHub release, creating it or filling in an existing draft:
+
+| Asset | Use |
+| --- | --- |
+| `Clack-<version>-setup.exe` | Combined x64 + arm64 installer — the normal download |
+| `Clack-<version>-x64-setup.exe` | x64-only installer |
+| `Clack-<version>-arm64-setup.exe` | Windows-on-ARM installer |
+
+Manual route, if you'd rather not tag: run `npm run dist` on a Windows machine, open the draft release, attach the `release/*.exe` files, then press **Publish release**.
+
+Installers are unsigned, so Windows SmartScreen shows *Windows protected your PC* — choose **More info → Run anyway**. Users of the private repo must be signed in to GitHub to download release assets.
+
 > Packaging a Windows installer works from Linux/macOS only with [wine](https://electron.build/multi-platform-build) present, because the exe icon and version resources are patched with rcedit. The GitHub Actions workflow runs on `windows-latest`, where this is native.
 
 ## Using it
