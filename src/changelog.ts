@@ -9,7 +9,7 @@ export interface ReleaseNote {
 export const RELEASES: ReleaseNote[] = [
   {
     version: '1.2.0',
-    date: null,
+    date: '2026-11-19',
     changes: [
       'Mouse clicks now have their own sound, captured by the same low-level hook as the keyboard.',
       'Keyboard and mouse each get their own pack picker, switched with the Keyboard / Mouse tabs at the bottom centre of the window.',
@@ -17,6 +17,7 @@ export const RELEASES: ReleaseNote[] = [
       'Mouse clicks are placed in the stereo field by where the cursor is on screen, like a key is by its place on the board.',
       'Volume, pitch variation, stereo width, sample rotation and launch at login stay shared between keyboard and mouse.',
       'Tray menu gained a Mouse clicks toggle plus separate Keyboard switch and Mouse switch submenus.',
+      'Orange accent colour across the status light, active profile, dock tabs and live meter.',
     ],
   },
   {
