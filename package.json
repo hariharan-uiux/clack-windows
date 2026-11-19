@@ -1,6 +1,6 @@
 {
   "name": "clack-windows",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Mechanical keyboard sounds for Windows. Global key capture, spatial audio, per-key sample variation.",
   "main": "electron/main.cjs",

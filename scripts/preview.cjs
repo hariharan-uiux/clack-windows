@@ -30,7 +30,7 @@ const settings = {
   launchAtLogin: false,
 };
 
-const state = { settings, profiles, state: { hook: 'running', hookError: null } };
+const state = { version: '1.1.0', settings, profiles, state: { hook: 'running', hookError: null } };
 let win;
 
 function sounds() {

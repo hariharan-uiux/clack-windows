@@ -22,6 +22,7 @@ export interface HookState {
 }
 
 export interface AppState {
+  version: string;
   settings: Settings;
   profiles: Profile[];
   state: HookState;

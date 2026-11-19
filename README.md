@@ -48,7 +48,7 @@ Windows builds also run in CI (`.github/workflows/build-windows.yml`): every pus
 
 Installer builds and publishing are automated:
 
-1. Bump `version` in `package.json` (for example `1.0.1`).
+1. Bump `version` in `package.json` (for example `1.0.1`), then add the same version and its changes to `src/changelog.ts` — the in-app Versions panel reads that file.
 2. Commit and push to `main`.
 3. Tag and push: `git tag -a v1.0.1 -m "Clack 1.0.1" && git push origin v1.0.1`.
 
@@ -68,8 +68,9 @@ Installers are unsigned, so Windows SmartScreen shows *Windows protected your PC
 
 ## Using it
 
-- The window is the settings panel. Closing it keeps Clack running in the tray.
-- Left-click the tray icon to reopen settings; right-click for quick switch, volume, pause and quit.
+- The window is the settings panel. The title bar has three actions: **minimize** (normal taskbar button), **hide to tray** (removes the taskbar button), and **quit**.
+- Left-click the tray icon to reopen settings; right-click for Open Clack, Minimize to taskbar, Hide to tray, quick switch, volume, pause and quit.
+- The **Versions** panel lists every release; pick one to read its changes. The build you are running is tagged `RUNNING`.
 - **Key release** adds the up-stroke sample (slightly quieter, like a real board).
 - **Sample rotation** off replays one take per switch, on cycles through all takes.
 - **Stereo width** 0 % is mono, 100 % spreads the keyboard fully left-to-right.

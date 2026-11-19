@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ClackEngine } from './audio';
+import { RELEASES } from './changelog';
 import { keyName, keyPosition } from './keymap';
 import type { AppState, Settings } from './types';
 import './styles.css';
@@ -57,6 +58,7 @@ function App() {
   const [feed, setFeed] = useState<{ id: number; label: string; kind: 'down' | 'up'; pan: number }[]>([]);
   const [engineError, setEngineError] = useState<string | null>(null);
   const [samples, setSamples] = useState(0);
+  const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const engineRef = useRef<ClackEngine | null>(null);
   const meterRef = useRef<HTMLDivElement>(null);
   const feedId = useRef(0);
@@ -155,6 +157,10 @@ function App() {
   const hookOk = hook.hook === 'running';
   const enabled = settings.enabled && hookOk;
 
+  const installedListed = RELEASES.some((item) => item.version === state.version);
+  const activeVersion = selectedVersion ?? (installedListed ? state.version : RELEASES[0].version);
+  const release = RELEASES.find((item) => item.version === activeVersion) ?? RELEASES[0];
+
   async function selectProfile(id: string) {
     if (!state) return;
     await patch({ profile: id, enabled: true });
@@ -170,12 +176,34 @@ function App() {
           <span className="brand-sub">mechanical keyboard audio</span>
         </div>
         <div className="window-actions">
-          <button type="button" onClick={() => window.clack.windowAction('hide')} aria-label="Hide to tray">
+          <button
+            type="button"
+            onClick={() => window.clack.windowAction('minimize')}
+            aria-label="Minimize to taskbar"
+            title="Minimize to taskbar"
+          >
             <svg width="10" height="10" viewBox="0 0 10 10">
               <path d="M1 5h8" stroke="currentColor" strokeWidth="1.2" />
             </svg>
           </button>
-          <button type="button" onClick={() => window.clack.windowAction('close')} aria-label="Quit">
+          <button
+            type="button"
+            onClick={() => window.clack.windowAction('hide')}
+            aria-label="Hide to tray"
+            title="Hide to tray"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">
+              <path d="M5 1v5" />
+              <path d="M2.5 4L5 6.5 7.5 4" />
+              <path d="M1 8.5h8" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => window.clack.windowAction('close')}
+            aria-label="Quit Clack"
+            title="Quit Clack"
+          >
             <svg width="10" height="10" viewBox="0 0 10 10">
               <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.2" />
             </svg>
@@ -325,6 +353,41 @@ function App() {
                 </span>
               ))
             )}
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <span>VERSIONS</span>
+            <span className="panel-note">pick a release to see what changed</span>
+          </div>
+          <div className="versions">
+            <div className="version-picker" role="tablist" aria-label="Releases">
+              {RELEASES.map((item) => (
+                <button
+                  key={item.version}
+                  type="button"
+                  role="tab"
+                  aria-selected={item.version === release.version}
+                  className={`version-tab${item.version === release.version ? ' is-active' : ''}`}
+                  onClick={() => setSelectedVersion(item.version)}
+                >
+                  <span className="version-number">v{item.version}</span>
+                  <span className="version-date">{item.date ?? 'Unreleased'}</span>
+                </button>
+              ))}
+            </div>
+            <div className="version-body" role="tabpanel" aria-label={`Changes in Clack ${release.version}`}>
+              <div className="version-title">
+                <span>Clack {release.version}</span>
+                {release.version === state.version && <span className="badge">RUNNING</span>}
+              </div>
+              <ul className="changes">
+                {release.changes.map((change) => (
+                  <li key={change}>{change}</li>
+                ))}
+              </ul>
+            </div>
           </div>
         </section>
       </main>

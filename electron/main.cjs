@@ -93,7 +93,7 @@ function applyLoginItem() {
 }
 
 function snapshot() {
-  return { settings, profiles: PROFILES, state };
+  return { version: app.getVersion(), settings, profiles: PROFILES, state };
 }
 
 function broadcast() {
@@ -215,6 +215,22 @@ function showWindow() {
   win.focus();
 }
 
+/** Minimize to the taskbar. A hidden window is shown first so a taskbar button exists. */
+function minimizeWindow() {
+  if (!win) return createWindow();
+  if (!win.isVisible()) win.show();
+  win.minimize();
+}
+
+function hideWindow() {
+  if (win && !win.isDestroyed()) win.hide();
+}
+
+function quitApp() {
+  app.isQuitting = true;
+  app.quit();
+}
+
 /* -------------------------------------------------------------------- tray */
 
 function rebuildTray() {
@@ -225,6 +241,10 @@ function rebuildTray() {
   tray.setImage(process.platform === 'win32' ? icon.resize({ width: 16, height: 16 }) : icon);
 
   const menu = Menu.buildFromTemplate([
+    { label: 'Open Clack', default: true, click: showWindow },
+    { label: 'Minimize to taskbar', click: minimizeWindow },
+    { label: 'Hide to tray', click: hideWindow },
+    { type: 'separator' },
     {
       label: settings.enabled ? 'Clack is on' : 'Clack is off',
       type: 'checkbox',
@@ -245,7 +265,6 @@ function rebuildTray() {
       })),
     },
     { type: 'separator' },
-    { label: 'Settings…', click: showWindow },
     {
       label: 'Volume',
       submenu: [0.25, 0.5, 0.75, 1].map((value) => ({
@@ -264,10 +283,7 @@ function rebuildTray() {
     { type: 'separator' },
     {
       label: 'Quit Clack',
-      click: () => {
-        app.isQuitting = true;
-        app.quit();
-      },
+      click: quitApp,
     },
   ]);
 
@@ -296,13 +312,9 @@ ipcMain.handle('state:get', () => snapshot());
 ipcMain.handle('settings:set', (_event, patch) => update(patch || {}));
 ipcMain.handle('sounds:load', () => listPacks());
 ipcMain.handle('window:action', (_event, action) => {
-  if (!win) return;
-  if (action === 'hide') win.hide();
-  else if (action === 'minimize') win.minimize();
-  else if (action === 'close') {
-    app.isQuitting = true;
-    app.quit();
-  }
+  if (action === 'hide') hideWindow();
+  else if (action === 'minimize') minimizeWindow();
+  else if (action === 'close') quitApp();
 });
 
 /* ------------------------------------------------------------------- boot */
