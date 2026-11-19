@@ -20,6 +20,14 @@ const PROFILES = [
   { id: 'cardboard', name: 'Cardboard', brand: 'Flurples', note: 'Dry, papery snap' },
 ];
 
+/** Mouse packs live in `sounds/mouse/<id>/`. */
+const MOUSE_PROFILES = [
+  { id: 'tactile', name: 'Tactile', brand: 'Plastic', note: 'Crisp, bright click' },
+  { id: 'soft', name: 'Soft', brand: 'Office', note: 'Damped, quiet tick' },
+  { id: 'heavy', name: 'Heavy', brand: 'Mechanical', note: 'Deep, weighty thock' },
+  { id: 'silent', name: 'Silent', brand: 'Rubber', note: 'Barely there' },
+];
+
 const DEFAULT_SETTINGS = {
   enabled: true,
   profile: 'japanese-black',
@@ -29,6 +37,9 @@ const DEFAULT_SETTINGS = {
   keyUp: true,
   randomize: true,
   launchAtLogin: false,
+  mouseEnabled: true,
+  mouseProfile: 'tactile',
+  mouseUp: true,
 };
 
 const soundsRoot = app.isPackaged
@@ -54,12 +65,17 @@ function sanitize(patch) {
   const next = { ...settings, ...patch };
   next.enabled = Boolean(next.enabled);
   next.profile = PROFILES.some((p) => p.id === next.profile) ? next.profile : DEFAULT_SETTINGS.profile;
+  next.mouseProfile = MOUSE_PROFILES.some((p) => p.id === next.mouseProfile)
+    ? next.mouseProfile
+    : DEFAULT_SETTINGS.mouseProfile;
   next.volume = clamp(next.volume, 0, 1);
   next.pitchRange = clamp(next.pitchRange, 0, 20);
   next.stereoWidth = clamp(next.stereoWidth, 0, 1);
   next.keyUp = Boolean(next.keyUp);
   next.randomize = Boolean(next.randomize);
   next.launchAtLogin = Boolean(next.launchAtLogin);
+  next.mouseEnabled = Boolean(next.mouseEnabled);
+  next.mouseUp = Boolean(next.mouseUp);
   return next;
 }
 
@@ -93,7 +109,7 @@ function applyLoginItem() {
 }
 
 function snapshot() {
-  return { version: app.getVersion(), settings, profiles: PROFILES, state };
+  return { version: app.getVersion(), settings, profiles: PROFILES, mouseProfiles: MOUSE_PROFILES, state };
 }
 
 function broadcast() {
@@ -103,24 +119,33 @@ function broadcast() {
 
 /* ------------------------------------------------------------------- audio */
 
-function listPacks() {
+function readPacks(root) {
   const out = {};
-  for (const profile of PROFILES) {
-    const dir = path.join(soundsRoot, profile.id);
-    if (!fs.existsSync(dir)) continue;
+  if (!fs.existsSync(root)) return out;
+  for (const id of fs.readdirSync(root, { withFileTypes: true })) {
+    if (!id.isDirectory()) continue;
+    const dir = path.join(root, id.name);
     const files = fs.readdirSync(dir).filter((f) => f.endsWith('.wav'));
-    out[profile.id] = files
+    if (!files.length) continue;
+    out[id.name] = files
       .map((f) => {
         const buffer = fs.readFileSync(path.join(dir, f));
         return {
           name: f,
-          kind: f.includes('-up') ? 'up' : 'down',
+          kind: /(^|-)up[-.]/.test(f) ? 'up' : 'down',
           bytes: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name));
   }
   return out;
+}
+
+function listPacks() {
+  return {
+    keyboard: readPacks(soundsRoot),
+    mouse: readPacks(path.join(soundsRoot, 'mouse')),
+  };
 }
 
 /* -------------------------------------------------------------------- hook */
@@ -142,6 +167,9 @@ function startHook() {
       emitKey('up', event.keycode);
     });
 
+    uIOhook.on('mousedown', (event) => emitMouse('down', event));
+    uIOhook.on('mouseup', (event) => emitMouse('up', event));
+
     uIOhook.start();
     hook = uIOhook;
     state = { hook: 'running', hookError: null };
@@ -151,11 +179,29 @@ function startHook() {
   }
 }
 
+/** libuiohook button numbers: 1 left, 2 right, 3 middle. Others are ignored. */
+const MOUSE_BUTTONS = { 1: 'LEFT', 2: 'RIGHT', 3: 'MIDDLE' };
+
 function emitKey(kind, keycode) {
   if (!settings.enabled) return;
   if (kind === 'up' && !settings.keyUp) return;
   if (!win || win.isDestroyed()) return;
   win.webContents.send('key:event', { kind, keycode, at: Date.now() });
+}
+
+function emitMouse(kind, event) {
+  if (!settings.enabled || !settings.mouseEnabled) return;
+  if (kind === 'up' && !settings.mouseUp) return;
+  const label = MOUSE_BUTTONS[event.button];
+  if (!label) return;
+  if (!win || win.isDestroyed()) return;
+
+  // Cursor x across the primary display drives stereo placement, the same way
+  // a key's position on the board does for typing.
+  const { bounds } = screen.getPrimaryDisplay();
+  const position = bounds.width > 0 ? Math.min(1, Math.max(0, (event.x - bounds.x) / bounds.width)) : 0.5;
+
+  win.webContents.send('mouse:event', { kind, label, position, at: Date.now() });
 }
 
 /* ------------------------------------------------------------------ window */
@@ -251,16 +297,34 @@ function rebuildTray() {
       checked: settings.enabled,
       click: (item) => update({ enabled: item.checked }),
     },
+    {
+      label: 'Mouse clicks',
+      type: 'checkbox',
+      checked: settings.mouseEnabled,
+      click: (item) => update({ mouseEnabled: item.checked }),
+    },
     { type: 'separator' },
     {
-      label: 'Switch',
+      label: 'Keyboard switch',
       submenu: PROFILES.map((profile) => ({
         label: `${profile.name} — ${profile.brand}`,
         type: 'radio',
         checked: settings.profile === profile.id,
         click: () => {
           update({ profile: profile.id, enabled: true });
-          if (win && !win.isDestroyed()) win.webContents.send('sound:demo');
+          if (win && !win.isDestroyed()) win.webContents.send('sound:demo', { profile: profile.id });
+        },
+      })),
+    },
+    {
+      label: 'Mouse switch',
+      submenu: MOUSE_PROFILES.map((profile) => ({
+        label: `${profile.name} — ${profile.brand}`,
+        type: 'radio',
+        checked: settings.mouseProfile === profile.id,
+        click: () => {
+          update({ mouseProfile: profile.id, mouseEnabled: true });
+          if (win && !win.isDestroyed()) win.webContents.send('sound:demo', { profile: profile.id });
         },
       })),
     },
@@ -287,7 +351,11 @@ function rebuildTray() {
     },
   ]);
 
-  tray.setToolTip(settings.enabled ? `Clack — ${PROFILES.find((p) => p.id === settings.profile)?.name ?? ''}` : 'Clack — paused');
+  tray.setToolTip(
+    settings.enabled
+      ? `Clack — ${PROFILES.find((p) => p.id === settings.profile)?.name ?? ''}`
+      : 'Clack — paused',
+  );
   tray.setContextMenu(menu);
 }
 

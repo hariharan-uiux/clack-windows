@@ -2,7 +2,7 @@
 
 /**
  * UI preview harness — opens the real renderer with the real samples, but with
- * stubbed IPC and a synthetic key feed instead of the OS hook.
+ * stubbed IPC and a synthetic key/mouse feed instead of the OS hook.
  *
  * Useful for UI work and screenshots on any platform. Not part of the app.
  *   npm run preview
@@ -18,6 +18,12 @@ const profiles = [
   { id: 'crystal-purple', name: 'Crystal Purple', brand: 'Everglide', note: 'Bright, glassy tick' },
   { id: 'cardboard', name: 'Cardboard', brand: 'Flurples', note: 'Dry, papery snap' },
 ];
+const mouseProfiles = [
+  { id: 'tactile', name: 'Tactile', brand: 'Plastic', note: 'Crisp, bright click' },
+  { id: 'soft', name: 'Soft', brand: 'Office', note: 'Damped, quiet tick' },
+  { id: 'heavy', name: 'Heavy', brand: 'Mechanical', note: 'Deep, weighty thock' },
+  { id: 'silent', name: 'Silent', brand: 'Rubber', note: 'Barely there' },
+];
 
 const settings = {
   enabled: true,
@@ -28,29 +34,45 @@ const settings = {
   keyUp: true,
   randomize: true,
   launchAtLogin: false,
+  mouseEnabled: true,
+  mouseProfile: 'tactile',
+  mouseUp: true,
 };
 
-const state = { version: '1.1.0', settings, profiles, state: { hook: 'running', hookError: null } };
+const state = {
+  version: '1.2.0',
+  settings,
+  profiles,
+  mouseProfiles,
+  state: { hook: 'running', hookError: null },
+};
 let win;
 
-function sounds() {
+function readPacks(dir) {
   const out = {};
-  for (const profile of profiles) {
-    const dir = path.join(root, 'sounds', profile.id);
-    if (!fs.existsSync(dir)) continue;
-    out[profile.id] = fs
-      .readdirSync(dir)
-      .filter((file) => file.endsWith('.wav'))
-      .map((file) => {
-        const buffer = fs.readFileSync(path.join(dir, file));
-        return {
-          name: file,
-          kind: file.includes('-up') ? 'up' : 'down',
-          bytes: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
-        };
-      });
+  if (!fs.existsSync(dir)) return out;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const packDir = path.join(dir, entry.name);
+    const files = fs.readdirSync(packDir).filter((file) => file.endsWith('.wav'));
+    if (!files.length) continue;
+    out[entry.name] = files.map((file) => {
+      const buffer = fs.readFileSync(path.join(packDir, file));
+      return {
+        name: file,
+        kind: /(^|-)up[-.]/.test(file) ? 'up' : 'down',
+        bytes: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+      };
+    });
   }
   return out;
+}
+
+function sounds() {
+  return {
+    keyboard: readPacks(path.join(root, 'sounds')),
+    mouse: readPacks(path.join(root, 'sounds', 'mouse')),
+  };
 }
 
 ipcMain.handle('state:get', () => state);
@@ -77,11 +99,24 @@ app.whenReady().then(() => {
   win.loadFile(path.join(root, 'dist', 'index.html'));
 
   const demo = [30, 31, 32, 33, 38, 57, 46, 47, 16, 23, 28, 30];
+  const buttons = ['LEFT', 'LEFT', 'RIGHT', 'LEFT', 'MIDDLE'];
   let index = 0;
+  let clicks = 0;
   setInterval(() => {
     const keycode = demo[index % demo.length];
     index += 1;
     win.webContents.send('key:event', { kind: 'down', keycode, at: Date.now() });
     setTimeout(() => win.webContents.send('key:event', { kind: 'up', keycode, at: Date.now() }), 55);
   }, 900);
+
+  setInterval(() => {
+    const position = 0.15 + (clicks % 5) * 0.17;
+    const label = buttons[clicks % buttons.length];
+    clicks += 1;
+    win.webContents.send('mouse:event', { kind: 'down', label, position, at: Date.now() });
+    setTimeout(
+      () => win.webContents.send('mouse:event', { kind: 'up', label, position, at: Date.now() }),
+      70,
+    );
+  }, 1400);
 });

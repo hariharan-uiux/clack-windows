@@ -18,8 +18,13 @@ contextBridge.exposeInMainWorld('clack', {
     return () => ipcRenderer.removeListener('state:changed', handler);
   },
   onDemo: (callback) => {
-    const handler = () => callback();
+    const handler = (_event, payload) => callback(payload || {});
     ipcRenderer.on('sound:demo', handler);
     return () => ipcRenderer.removeListener('sound:demo', handler);
+  },
+  onMouse: (callback) => {
+    const handler = (_event, payload) => callback(payload);
+    ipcRenderer.on('mouse:event', handler);
+    return () => ipcRenderer.removeListener('mouse:event', handler);
   },
 });

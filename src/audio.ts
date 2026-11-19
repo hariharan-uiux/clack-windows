@@ -1,5 +1,4 @@
-import type { Settings, SoundFile, SoundPacks } from './types';
-import { keyPosition } from './keymap';
+import type { Settings, SoundFile, SoundLibrary, SoundPacks } from './types';
 
 type Kind = 'down' | 'up';
 type Pack = { down: AudioBuffer[]; up: AudioBuffer[] };
@@ -42,24 +41,28 @@ export class ClackEngine {
     }
   }
 
-  async load(files: SoundPacks) {
+  async load(files: SoundLibrary) {
     try {
       this.ensureContext();
       const ctx = this.ctx!;
       const decoded: Record<string, Pack> = {};
 
-      for (const [profileId, list] of Object.entries(files)) {
-        const pack: Pack = { down: [], up: [] };
-        for (const file of list as SoundFile[]) {
-          try {
-            // decodeAudioData detaches the buffer, so hand it a copy.
-            const buffer = await ctx.decodeAudioData(file.bytes.slice(0));
-            pack[file.kind].push(buffer);
-          } catch (error) {
-            console.warn('[clack] could not decode', file.name, error);
+      // Keyboard and mouse pack ids are distinct, so one map holds both.
+      const sources: SoundPacks[] = [files.keyboard ?? {}, files.mouse ?? {}];
+      for (const source of sources) {
+        for (const [profileId, list] of Object.entries(source)) {
+          const pack: Pack = { down: [], up: [] };
+          for (const file of list as SoundFile[]) {
+            try {
+              // decodeAudioData detaches the buffer, so hand it a copy.
+              const buffer = await ctx.decodeAudioData(file.bytes.slice(0));
+              pack[file.kind].push(buffer);
+            } catch (error) {
+              console.warn('[clack] could not decode', file.name, error);
+            }
           }
+          if (pack.down.length || pack.up.length) decoded[profileId] = pack;
         }
-        if (pack.down.length || pack.up.length) decoded[profileId] = pack;
       }
 
       this.packs = decoded;
@@ -74,16 +77,20 @@ export class ClackEngine {
     if (this.ctx && this.ctx.state === 'suspended') await this.ctx.resume();
   }
 
-  play(kind: Kind, keycode: number) {
+  /**
+   * Play one take from a pack. `position` is 0..1 across the stereo field:
+   * a key's place on the board, or the cursor's place on the screen.
+   */
+  play(kind: Kind, profileId: string, position = 0.5) {
     const ctx = this.ctx;
-    const pack = this.packs[this.settings.profile];
+    const pack = this.packs[profileId];
     if (!ctx || !pack || !this.master) return;
     if (ctx.state === 'suspended') void ctx.resume();
 
     const pool = kind === 'up' ? pack.up : pack.down;
     if (!pool.length) return;
 
-    const pickKey = `${this.settings.profile}:${kind}`;
+    const pickKey = `${profileId}:${kind}`;
     let index = 0;
     if (this.settings.randomize && pool.length > 1) {
       const previous = this.lastPick[pickKey] ?? -1;
@@ -95,7 +102,7 @@ export class ClackEngine {
 
     const buffer = pool[index];
     const pitch = 1 + (Math.random() * 2 - 1) * (this.settings.pitchRange / 100);
-    const pan = (keyPosition(keycode) * 2 - 1) * this.settings.stereoWidth;
+    const pan = (position * 2 - 1) * this.settings.stereoWidth;
     const trim = kind === 'up' ? 0.72 : 1;
 
     const source = ctx.createBufferSource();
