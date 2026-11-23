@@ -89,6 +89,7 @@ app.whenReady().then(() => {
     width: 880,
     height: 800,
     frame: false,
+    icon: path.join(root, 'build', 'icon.png'),
     backgroundColor: '#09090b',
     webPreferences: {
       preload: path.join(root, 'electron', 'preload.cjs'),

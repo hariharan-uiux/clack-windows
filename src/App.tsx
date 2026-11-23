@@ -249,6 +249,7 @@ function App() {
     <div className="app">
       <header className="titlebar">
         <div className="brand">
+          <img src="/icon.png" alt="Clack" className="brand-icon" />
           <span className={`dot${enabled ? ' is-live' : ''}`} />
           <span className="brand-name">CLACK</span>
           <span className="brand-sub">keyboard + mouse audio</span>

@@ -405,3 +405,13 @@ if __name__ == '__main__':
     render_app_icon(icon_path)
     render_tray_icon(tray_path)
     print(f"wrote {icon_path} (512x512) and {tray_path} (32x32)")
+
+    # Also build multi-resolution icon.ico for native Windows packaging
+    try:
+        from PIL import Image
+        img = Image.open(icon_path)
+        ico_path = os.path.join(build_dir, 'icon.ico')
+        img.save(ico_path, format='ICO', sizes=[(16,16), (24,24), (32,32), (48,48), (64,64), (128,128), (256,256)])
+        print(f"wrote {ico_path} (multi-resolution Windows ICO 16..256)")
+    except Exception as err:
+        print(f"note: could not generate .ico ({err})")

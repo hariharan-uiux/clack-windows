@@ -13,6 +13,7 @@ files:
   - dist/**/*
   - electron/**/*
   - build/*.png
+  - build/*.ico
   - package.json
   - '!**/*.map'
 
@@ -31,7 +32,7 @@ win:
       arch:
         - x64
         - arm64
-  icon: build/icon.png
+  icon: build/icon.ico
   artifactName: Clack-${version}-${arch}-setup.${ext}
   executableName: Clack
 
