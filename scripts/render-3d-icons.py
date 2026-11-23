@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Renders build/icon.png (512x512) and build/tray.png (32x32) as an authentic
-geometrical 3D isometric mechanical keyboard "C" keycap with industrial orange
-accent lighting (#f97316).
+geometrical 3D isometric mechanical keyboard "C" keycap in a dark stealth obsidian
+palette with an illuminated industrial orange (#f97316) legend.
 """
 import cairo
 import math
@@ -56,21 +56,21 @@ def render_app_icon(output_path):
     scale = 1.12
     cx, cy = 256, 282
     
-    # 1. Multi-tier Ambient Drop Shadow
+    # 1. Multi-tier Ambient Drop Shadow & Ground Contact
     shadow_pts = get_points(312, 312, 56, z=-14, steps=32)
     proj_shadow = [project(p[0], p[1], p[2], cx=cx, cy=cy + 10, scale=scale) for p in shadow_pts]
     
-    for blur in range(18, 0, -2):
+    for blur in range(20, 0, -2):
         ctx.save()
-        ctx.move_to(proj_shadow[0][0], proj_shadow[0][1] + blur * 1.5)
+        ctx.move_to(proj_shadow[0][0], proj_shadow[0][1] + blur * 1.6)
         for p in proj_shadow[1:]:
-            ctx.line_to(p[0], p[1] + blur * 1.5)
+            ctx.line_to(p[0], p[1] + blur * 1.6)
         ctx.close_path()
-        ctx.set_source_rgba(0, 0, 0, 0.038)
+        ctx.set_source_rgba(0, 0, 0, 0.05)
         ctx.fill()
         ctx.restore()
         
-    # 2. Keycap Base Points & Top Points
+    # 2. Keycap Points
     base_w, base_d, base_r = 296, 296, 54
     top_w, top_d, top_r = 222, 222, 42
     z_top = 124
@@ -99,13 +99,13 @@ def render_app_icon(output_path):
         ctx.line_to(proj_base[i][0], proj_base[i][1])
     ctx.close_path()
     pat_skirt = cairo.LinearGradient(proj_skirt[i_left][0], proj_skirt[i_left][1], proj_skirt[i_right][0], proj_skirt[i_right][1])
-    pat_skirt.add_color_stop_rgba(0, 0.72, 0.74, 0.80, 1.0)
-    pat_skirt.add_color_stop_rgba(0.5, 0.62, 0.64, 0.70, 1.0)
-    pat_skirt.add_color_stop_rgba(1, 0.52, 0.54, 0.60, 1.0)
+    pat_skirt.add_color_stop_rgba(0, 0.12, 0.12, 0.15, 1.0)
+    pat_skirt.add_color_stop_rgba(0.5, 0.08, 0.08, 0.11, 1.0)
+    pat_skirt.add_color_stop_rgba(1, 0.05, 0.05, 0.07, 1.0)
     ctx.set_source(pat_skirt)
     ctx.fill()
     
-    # 4. Left Flank: from i_left to i_front
+    # 4. Left Flank: from i_left to i_front (Key-lit dark obsidian)
     ctx.move_to(proj_base[i_left][0], proj_base[i_left][1])
     for i in range(i_left + 1, i_front + 1):
         ctx.line_to(proj_base[i][0], proj_base[i][1])
@@ -114,13 +114,25 @@ def render_app_icon(output_path):
     ctx.close_path()
     
     pat_left = cairo.LinearGradient(proj_top[i_left][0], proj_top[i_left][1], proj_base[i_front][0], proj_base[i_front][1])
-    pat_left.add_color_stop_rgba(0, 0.98, 0.98, 1.0, 1.0)
-    pat_left.add_color_stop_rgba(0.7, 0.90, 0.91, 0.94, 1.0)
-    pat_left.add_color_stop_rgba(1.0, 0.82, 0.84, 0.88, 1.0)
+    pat_left.add_color_stop_rgba(0, 0.24, 0.24, 0.29, 1.0)
+    pat_left.add_color_stop_rgba(0.6, 0.16, 0.16, 0.20, 1.0)
+    pat_left.add_color_stop_rgba(1.0, 0.10, 0.10, 0.13, 1.0)
     ctx.set_source(pat_left)
     ctx.fill()
     
-    # 5. Right Flank: from i_front to i_right
+    # Left flank subtle rim stroke
+    ctx.move_to(proj_base[i_left][0], proj_base[i_left][1])
+    for i in range(i_left + 1, i_front + 1):
+        ctx.line_to(proj_base[i][0], proj_base[i][1])
+    ctx.line_to(proj_top[i_front][0], proj_top[i_front][1])
+    for i in range(i_front - 1, i_left - 1, -1):
+        ctx.line_to(proj_top[i][0], proj_top[i][1])
+    ctx.close_path()
+    ctx.set_source_rgba(1, 1, 1, 0.08)
+    ctx.set_line_width(1.0)
+    ctx.stroke()
+    
+    # 5. Right Flank: from i_front to i_right (Secondary shadow dark charcoal)
     ctx.move_to(proj_base[i_front][0], proj_base[i_front][1])
     for i in range(i_front + 1, i_right + 1):
         ctx.line_to(proj_base[i][0], proj_base[i][1])
@@ -129,20 +141,24 @@ def render_app_icon(output_path):
     ctx.close_path()
     
     pat_right = cairo.LinearGradient(proj_top[i_right][0], proj_top[i_right][1], proj_base[i_front][0], proj_base[i_front][1])
-    pat_right.add_color_stop_rgba(0, 0.88, 0.90, 0.93, 1.0)
-    pat_right.add_color_stop_rgba(0.7, 0.78, 0.80, 0.85, 1.0)
-    pat_right.add_color_stop_rgba(1.0, 0.68, 0.70, 0.76, 1.0)
+    pat_right.add_color_stop_rgba(0, 0.16, 0.16, 0.20, 1.0)
+    pat_right.add_color_stop_rgba(0.6, 0.10, 0.10, 0.13, 1.0)
+    pat_right.add_color_stop_rgba(1.0, 0.06, 0.06, 0.08, 1.0)
     ctx.set_source(pat_right)
     ctx.fill()
     
     # Front Corner Ridge Specular Highlight
     ctx.move_to(proj_base[i_front][0], proj_base[i_front][1])
     ctx.line_to(proj_top[i_front][0], proj_top[i_front][1])
-    ctx.set_source_rgba(1, 1, 1, 0.75)
+    pat_ridge = cairo.LinearGradient(proj_base[i_front][0], proj_base[i_front][1], proj_top[i_front][0], proj_top[i_front][1])
+    pat_ridge.add_color_stop_rgba(0, 0.35, 0.35, 0.42, 0.4)
+    pat_ridge.add_color_stop_rgba(0.7, 0.65, 0.65, 0.75, 0.8)
+    pat_ridge.add_color_stop_rgba(1.0, 0.90, 0.90, 0.98, 0.95)
+    ctx.set_source(pat_ridge)
     ctx.set_line_width(2.0)
     ctx.stroke()
     
-    # 6. Keycap Top Face
+    # 6. Keycap Top Face (Dark graphite top surface)
     ctx.move_to(proj_top[0][0], proj_top[0][1])
     for p in proj_top[1:]:
         ctx.line_to(p[0], p[1])
@@ -150,22 +166,26 @@ def render_app_icon(output_path):
     
     top_center = project(0, 0, z_top, cx=cx, cy=cy, scale=scale)
     pat_top = cairo.LinearGradient(top_center[0] - 60, top_center[1] - 80, top_center[0] + 60, top_center[1] + 60)
-    pat_top.add_color_stop_rgba(0, 1.0, 1.0, 1.0, 1.0)
-    pat_top.add_color_stop_rgba(0.6, 0.96, 0.97, 0.98, 1.0)
-    pat_top.add_color_stop_rgba(1.0, 0.90, 0.92, 0.95, 1.0)
+    pat_top.add_color_stop_rgba(0, 0.28, 0.28, 0.34, 1.0)
+    pat_top.add_color_stop_rgba(0.5, 0.18, 0.18, 0.22, 1.0)
+    pat_top.add_color_stop_rgba(1.0, 0.12, 0.12, 0.15, 1.0)
     ctx.set_source(pat_top)
     ctx.fill()
     
-    # Chamfer stroke on top perimeter
+    # Precision Chamfer Highlight Ring around top perimeter
     ctx.move_to(proj_top[0][0], proj_top[0][1])
     for p in proj_top[1:]:
         ctx.line_to(p[0], p[1])
     ctx.close_path()
-    ctx.set_source_rgba(1, 1, 1, 0.95)
+    pat_chamfer = cairo.LinearGradient(top_center[0] - 80, top_center[1] - 80, top_center[0] + 80, top_center[1] + 80)
+    pat_chamfer.add_color_stop_rgba(0, 0.65, 0.65, 0.75, 0.95)
+    pat_chamfer.add_color_stop_rgba(0.5, 0.35, 0.35, 0.42, 0.6)
+    pat_chamfer.add_color_stop_rgba(1.0, 0.18, 0.18, 0.22, 0.8)
+    ctx.set_source(pat_chamfer)
     ctx.set_line_width(2.2)
     ctx.stroke()
     
-    # 7. Ergonomic Spherical Keycap Dish
+    # 7. Ergonomic Spherical Keycap Dish (Deep recessed dark dish)
     dish_pts = get_points(top_w - 28, top_d - 28, top_r - 6, z=z_top - 6, steps=32)
     proj_dish = [project(p[0], p[1], p[2], cx=cx, cy=cy, scale=scale) for p in dish_pts]
     dish_center = project(0, 0, z_top - 6, cx=cx, cy=cy, scale=scale)
@@ -175,9 +195,9 @@ def render_app_icon(output_path):
         ctx.line_to(p[0], p[1])
     ctx.close_path()
     pat_dish = cairo.RadialGradient(dish_center[0], dish_center[1] - 15, 20, dish_center[0], dish_center[1], 130)
-    pat_dish.add_color_stop_rgba(0, 0.98, 0.98, 0.99, 1.0)
-    pat_dish.add_color_stop_rgba(0.7, 0.94, 0.94, 0.96, 1.0)
-    pat_dish.add_color_stop_rgba(1.0, 0.89, 0.90, 0.93, 1.0)
+    pat_dish.add_color_stop_rgba(0, 0.16, 0.16, 0.20, 1.0)
+    pat_dish.add_color_stop_rgba(0.7, 0.11, 0.11, 0.14, 1.0)
+    pat_dish.add_color_stop_rgba(1.0, 0.08, 0.08, 0.10, 1.0)
     ctx.set_source(pat_dish)
     ctx.fill()
     
@@ -187,16 +207,16 @@ def render_app_icon(output_path):
         ctx.line_to(p[0], p[1])
     ctx.close_path()
     pat_dish_rim = cairo.LinearGradient(dish_center[0], dish_center[1] - 70, dish_center[0], dish_center[1] + 70)
-    pat_dish_rim.add_color_stop_rgba(0, 0.52, 0.55, 0.62, 0.35)
-    pat_dish_rim.add_color_stop_rgba(0.3, 0, 0, 0, 0)
-    pat_dish_rim.add_color_stop_rgba(0.7, 1, 1, 1, 0)
-    pat_dish_rim.add_color_stop_rgba(1, 1, 1, 1, 0.9)
+    pat_dish_rim.add_color_stop_rgba(0, 0.04, 0.04, 0.06, 0.8)
+    pat_dish_rim.add_color_stop_rgba(0.4, 0, 0, 0, 0)
+    pat_dish_rim.add_color_stop_rgba(0.7, 0.35, 0.35, 0.42, 0.0)
+    pat_dish_rim.add_color_stop_rgba(1.0, 0.45, 0.45, 0.55, 0.7)
     ctx.set_source(pat_dish_rim)
     ctx.set_line_width(1.8)
     ctx.stroke()
     
-    # 8. Radiant Industrial Orange Halo around 'C'
-    for r_glow, g_alpha in [(115, 0.05), (80, 0.12), (50, 0.22), (28, 0.35)]:
+    # 8. Electric Vibrant Industrial Orange Glow radiating from 'C'
+    for r_glow, g_alpha in [(130, 0.06), (90, 0.14), (60, 0.26), (32, 0.45)]:
         glow = cairo.RadialGradient(dish_center[0], dish_center[1], 6, dish_center[0], dish_center[1], r_glow)
         glow.add_color_stop_rgba(0, 0.98, 0.45, 0.09, g_alpha)
         glow.add_color_stop_rgba(1, 0.98, 0.45, 0.09, 0)
@@ -204,7 +224,7 @@ def render_app_icon(output_path):
         ctx.arc(dish_center[0], dish_center[1], r_glow, 0, 2 * math.pi)
         ctx.fill()
         
-    # 9. Projected 'C' Key Legend
+    # 9. Projected 'C' Key Legend (Illuminated double-shot orange legend)
     outer_r = 65
     inner_r = 35
     gap_deg = 74
@@ -236,21 +256,21 @@ def render_app_icon(output_path):
     ctx.close_path()
     
     pat_c = cairo.LinearGradient(dish_center[0], dish_center[1] - 45, dish_center[0], dish_center[1] + 45)
-    pat_c.add_color_stop_rgba(0, 1.0, 0.68, 0.22, 1.0)
-    pat_c.add_color_stop_rgba(0.45, 0.98, 0.45, 0.09, 1.0)
-    pat_c.add_color_stop_rgba(1.0, 0.85, 0.26, 0.04, 1.0)
+    pat_c.add_color_stop_rgba(0, 1.0, 0.72, 0.28, 1.0)     # Golden amber crest
+    pat_c.add_color_stop_rgba(0.45, 0.98, 0.45, 0.09, 1.0) # Signature industrial orange #f97316
+    pat_c.add_color_stop_rgba(1.0, 0.88, 0.28, 0.04, 1.0)  # Deep radiant orange
     ctx.set_source(pat_c)
     ctx.fill()
     
-    # Specular rim highlight on 'C'
+    # Specular rim highlight on the 'C' legend
     ctx.move_to(c_proj[0][0], c_proj[0][1])
     for p in c_proj[1:]:
         ctx.line_to(p[0], p[1])
     ctx.close_path()
     pat_c_rim = cairo.LinearGradient(dish_center[0], dish_center[1] - 45, dish_center[0], dish_center[1] + 45)
-    pat_c_rim.add_color_stop_rgba(0, 1.0, 0.90, 0.65, 0.9)
-    pat_c_rim.add_color_stop_rgba(0.6, 0.98, 0.45, 0.09, 0.35)
-    pat_c_rim.add_color_stop_rgba(1.0, 0.70, 0.20, 0.02, 0.8)
+    pat_c_rim.add_color_stop_rgba(0, 1.0, 0.92, 0.70, 0.95)
+    pat_c_rim.add_color_stop_rgba(0.6, 0.98, 0.45, 0.09, 0.45)
+    pat_c_rim.add_color_stop_rgba(1.0, 0.75, 0.22, 0.02, 0.85)
     ctx.set_source(pat_c_rim)
     ctx.set_line_width(1.8)
     ctx.stroke()
@@ -292,7 +312,7 @@ def render_tray_icon(output_path):
     for i in range(i_right, i_left - 1, -1):
         ctx.line_to(proj_base[i][0], proj_base[i][1])
     ctx.close_path()
-    ctx.set_source_rgb(0.60, 0.62, 0.68)
+    ctx.set_source_rgb(0.08, 0.08, 0.11)
     ctx.fill()
     
     # Left Flank
@@ -302,7 +322,7 @@ def render_tray_icon(output_path):
     for i in range(i_front, i_left - 1, -1):
         ctx.line_to(proj_top[i][0], proj_top[i][1])
     ctx.close_path()
-    ctx.set_source_rgb(0.92, 0.93, 0.96)
+    ctx.set_source_rgb(0.24, 0.24, 0.30)
     ctx.fill()
     
     # Right Flank
@@ -312,25 +332,34 @@ def render_tray_icon(output_path):
     for i in range(i_right, i_front - 1, -1):
         ctx.line_to(proj_top[i][0], proj_top[i][1])
     ctx.close_path()
-    ctx.set_source_rgb(0.72, 0.74, 0.80)
+    ctx.set_source_rgb(0.12, 0.12, 0.16)
     ctx.fill()
-    
-    # Front Corner Ridge
-    ctx.move_to(proj_base[i_front][0], proj_base[i_front][1])
-    ctx.line_to(proj_top[i_front][0], proj_top[i_front][1])
-    ctx.set_source_rgba(1, 1, 1, 0.9)
-    ctx.set_line_width(0.8)
-    ctx.stroke()
     
     # Top Face
     ctx.move_to(proj_top[0][0], proj_top[0][1])
     for p in proj_top[1:]:
         ctx.line_to(p[0], p[1])
     ctx.close_path()
-    ctx.set_source_rgb(1.0, 1.0, 1.0)
+    ctx.set_source_rgb(0.18, 0.18, 0.23)
     ctx.fill()
     
-    # 'C' on Top face in bold vibrant industrial orange
+    # Crisp rim stroke for tray contrast
+    ctx.move_to(proj_top[0][0], proj_top[0][1])
+    for p in proj_top[1:]:
+        ctx.line_to(p[0], p[1])
+    ctx.close_path()
+    ctx.set_source_rgba(0.7, 0.7, 0.8, 0.9)
+    ctx.set_line_width(0.9)
+    ctx.stroke()
+    
+    # Front Corner Ridge
+    ctx.move_to(proj_base[i_front][0], proj_base[i_front][1])
+    ctx.line_to(proj_top[i_front][0], proj_top[i_front][1])
+    ctx.set_source_rgba(0.8, 0.8, 0.9, 0.95)
+    ctx.set_line_width(1.0)
+    ctx.stroke()
+    
+    # 'C' on Top face in radiant industrial orange
     outer_r = 74
     inner_r = 28
     gap_deg = 80
