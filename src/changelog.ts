@@ -8,6 +8,18 @@ export interface ReleaseNote {
 /** Newest first. Add an entry here whenever `package.json` version changes. */
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '1.3.0',
+    date: '2026-11-23',
+    changes: [
+      'New dark 3D mechanical "C" keycap icon in axonometric projection with stealth obsidian and titanium tones.',
+      'Illuminated double-shot keycap legend in brand industrial orange with warm neon bloom.',
+      'Multi-resolution Windows executable icon (.ico) embedding 16px to 256px mipmaps for desktop shortcuts, taskbar, and installer.',
+      'Matching high-contrast 3D system tray icon optimized for legibility on both dark and light Windows 11 taskbars.',
+      'In-app title bar and favicon updated to showcase the 3D mechanical keycap icon.',
+      'Automated icon generation pipeline (npm run icons) rendering production assets deterministically.',
+    ],
+  },
+  {
     version: '1.2.0',
     date: '2026-11-19',
     changes: [
