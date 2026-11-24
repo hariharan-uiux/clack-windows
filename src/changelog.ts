@@ -8,6 +8,18 @@ export interface ReleaseNote {
 /** Newest first. Add an entry here whenever `package.json` version changes. */
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '1.4.0',
+    date: '2026-11-24',
+    changes: [
+      'Four new iconic keyboard switches: Holy Panda, Cherry MX Blue, IBM Model M Buckling Spring, and Topre 45g (56 new stereo WAV takes).',
+      'Mouse scroll wheel ratchet audio with real-time OS hook detection and cursor-relative spatial stereo panning.',
+      'Sound mode switcher relocated to the top title bar with clean, minimalist icon-only controls.',
+      'Added "Buy Me a Coffee" button in the topbar opening directly in default system browser.',
+      'Redesigned window action buttons with matching outline container frame and hover states.',
+      'Refined layout margins and live feed bottom spacing (14px) for a complete zero-scroll single-window experience.',
+    ],
+  },
+  {
     version: '1.3.2',
     date: '2026-11-24',
     changes: [
