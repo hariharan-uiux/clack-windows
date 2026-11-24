@@ -40,7 +40,7 @@ const settings = {
 };
 
 const state = {
-  version: '1.3.1',
+  version: '1.3.2',
   settings,
   profiles,
   mouseProfiles,

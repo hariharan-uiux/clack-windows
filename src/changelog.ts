@@ -8,6 +8,16 @@ export interface ReleaseNote {
 /** Newest first. Add an entry here whenever `package.json` version changes. */
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '1.3.2',
+    date: '2026-11-24',
+    changes: [
+      'Streamlined status banner into a compact 70px strip with glowing horizontal power toggle.',
+      'Optimized layout geometry across all panels to eliminate vertical scrolling completely.',
+      'Removed redundant inline version history from the home screen in favor of the floating dock viewer.',
+      'Balanced padding and typography across profile cards, sliders, and live feed for clean viewport fitting.',
+    ],
+  },
+  {
     version: '1.3.1',
     date: '2026-11-24',
     changes: [
