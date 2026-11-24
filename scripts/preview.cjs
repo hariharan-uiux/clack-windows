@@ -86,8 +86,8 @@ ipcMain.handle('window:action', () => app.quit());
 
 app.whenReady().then(() => {
   win = new BrowserWindow({
-    width: 880,
-    height: 800,
+    width: 840,
+    height: 700,
     frame: false,
     icon: path.join(root, 'build', 'icon.png'),
     backgroundColor: '#09090b',

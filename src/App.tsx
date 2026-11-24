@@ -371,41 +371,156 @@ function App() {
           <span className="brand-name">CLACK</span>
           <span className="brand-sub">keyboard + mouse audio</span>
         </div>
-        <div className="window-actions">
-          <button
-            type="button"
-            onClick={() => window.clack.windowAction('minimize')}
-            aria-label="Minimize to taskbar"
-            title="Minimize to taskbar"
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10">
-              <path d="M1 5h8" stroke="currentColor" strokeWidth="1.2" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => window.clack.windowAction('hide')}
-            aria-label="Hide to tray"
-            title="Hide to tray"
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">
-              <path d="M5 1v5" />
-              <path d="M2.5 4L5 6.5 7.5 4" />
-              <path d="M1 8.5h8" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => window.clack.windowAction('close')}
-            aria-label="Quit Clack"
-            title="Quit Clack"
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10">
-              <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.2" />
-            </svg>
-          </button>
+
+        <div className="topbar-actions">
+          <div className="topbar-toggle" ref={dockRef} role="tablist" aria-label="Audio target and release">
+            <button
+              type="button"
+              role="tab"
+              id="tab-keyboard"
+              aria-selected={keyboardTab && !showVersions}
+              aria-controls="panel-keyboard"
+              className={`topbar-tab${keyboardTab && !showVersions ? ' is-active' : ''}`}
+              onClick={() => {
+                setShowVersions(false);
+                changeTab('keyboard');
+              }}
+              title="Keyboard Sound"
+              aria-label="Keyboard Sound"
+            >
+              <KeyboardIcon />
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="tab-mouse"
+              aria-selected={!keyboardTab && !showVersions}
+              aria-controls="panel-mouse"
+              className={`topbar-tab${!keyboardTab && !showVersions ? ' is-active' : ''}`}
+              onClick={() => {
+                setShowVersions(false);
+                changeTab('mouse');
+              }}
+              title="Mouse Sound"
+              aria-label="Mouse Sound"
+            >
+              <MouseIcon />
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="tab-versions"
+              aria-selected={showVersions}
+              aria-expanded={showVersions}
+              className={`topbar-tab${showVersions ? ' is-active' : ''}`}
+              onClick={() => setShowVersions((prev) => !prev)}
+              title={`Release Notes (v${state.version})`}
+              aria-label={`Release Notes (v${state.version})`}
+            >
+              <VersionIcon />
+            </button>
+          </div>
+
+          <div className="window-actions">
+            <button
+              type="button"
+              onClick={() => window.clack.windowAction('minimize')}
+              aria-label="Minimize to taskbar"
+              title="Minimize to taskbar"
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10">
+                <path d="M1 5h8" stroke="currentColor" strokeWidth="1.2" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => window.clack.windowAction('hide')}
+              aria-label="Hide to tray"
+              title="Hide to tray"
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">
+                <path d="M5 1v5" />
+                <path d="M2.5 4L5 6.5 7.5 4" />
+                <path d="M1 8.5h8" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => window.clack.windowAction('close')}
+              aria-label="Quit Clack"
+              title="Quit Clack"
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10">
+                <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.2" />
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
+
+      {showVersions && (
+        <div
+          className="dock-backdrop"
+          onClick={() => setShowVersions(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {showVersions && (
+        <div
+          className="topbar-popover"
+          ref={popoverRef}
+          role="dialog"
+          aria-label="Release notes"
+        >
+          <div className="topbar-popover-head">
+            <div className="topbar-popover-title">
+              <VersionIcon />
+              <span>RELEASE NOTES</span>
+              <span className="badge">v{state.version}</span>
+            </div>
+            <button
+              type="button"
+              className="topbar-popover-close"
+              onClick={() => setShowVersions(false)}
+              aria-label="Close release notes"
+              title="Close release notes"
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10">
+                <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.2" />
+              </svg>
+            </button>
+          </div>
+          <div className="versions">
+            <div className="version-picker" role="tablist" aria-label="Releases">
+              {RELEASES.map((item) => (
+                <button
+                  key={item.version}
+                  type="button"
+                  role="tab"
+                  aria-selected={item.version === release.version}
+                  className={`version-tab${item.version === release.version ? ' is-active' : ''}`}
+                  onClick={() => setSelectedVersion(item.version)}
+                >
+                  <span className="version-number">v{item.version}</span>
+                  <span className="version-date">{item.date ?? 'Unreleased'}</span>
+                </button>
+              ))}
+            </div>
+            <div className="version-body" role="tabpanel" aria-label={`Changes in Clack ${release.version}`}>
+              <div className="version-title">
+                <span>Clack {release.version}</span>
+                {release.version === state.version && <span className="badge">RUNNING</span>}
+              </div>
+              <ul className="changes">
+                {release.changes.map((change) => (
+                  <li key={change}>{change}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main>
         <section className={`status${enabled ? ' is-live' : ''}`}>
@@ -568,119 +683,6 @@ function App() {
           </div>
         </section>
       </main>
-
-      {showVersions && (
-        <div
-          className="dock-backdrop"
-          onClick={() => setShowVersions(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      <div className="dock-container">
-        {showVersions && (
-          <div
-            className="dock-popover"
-            ref={popoverRef}
-            role="dialog"
-            aria-label="Release notes"
-          >
-            <div className="dock-popover-head">
-              <div className="dock-popover-title">
-                <VersionIcon />
-                <span>RELEASE NOTES</span>
-                <span className="dock-badge">v{state.version}</span>
-              </div>
-              <button
-                type="button"
-                className="dock-popover-close"
-                onClick={() => setShowVersions(false)}
-                aria-label="Close release notes"
-                title="Close release notes"
-              >
-                <svg width="10" height="10" viewBox="0 0 10 10">
-                  <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.2" />
-                </svg>
-              </button>
-            </div>
-            <div className="versions">
-              <div className="version-picker" role="tablist" aria-label="Releases">
-                {RELEASES.map((item) => (
-                  <button
-                    key={item.version}
-                    type="button"
-                    role="tab"
-                    aria-selected={item.version === release.version}
-                    className={`version-tab${item.version === release.version ? ' is-active' : ''}`}
-                    onClick={() => setSelectedVersion(item.version)}
-                  >
-                    <span className="version-number">v{item.version}</span>
-                    <span className="version-date">{item.date ?? 'Unreleased'}</span>
-                  </button>
-                ))}
-              </div>
-              <div className="version-body" role="tabpanel" aria-label={`Changes in Clack ${release.version}`}>
-                <div className="version-title">
-                  <span>Clack {release.version}</span>
-                  {release.version === state.version && <span className="badge">RUNNING</span>}
-                </div>
-                <ul className="changes">
-                  {release.changes.map((change) => (
-                    <li key={change}>{change}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="dock" ref={dockRef} role="tablist" aria-label="Sound settings and releases">
-          <button
-            type="button"
-            role="tab"
-            id="tab-keyboard"
-            aria-selected={keyboardTab && !showVersions}
-            aria-controls="panel-keyboard"
-            className={`dock-tab${keyboardTab && !showVersions ? ' is-active' : ''}`}
-            onClick={() => {
-              setShowVersions(false);
-              changeTab('keyboard');
-            }}
-          >
-            <KeyboardIcon />
-            <span>Keyboard</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            id="tab-mouse"
-            aria-selected={!keyboardTab && !showVersions}
-            aria-controls="panel-mouse"
-            className={`dock-tab${!keyboardTab && !showVersions ? ' is-active' : ''}`}
-            onClick={() => {
-              setShowVersions(false);
-              changeTab('mouse');
-            }}
-          >
-            <MouseIcon />
-            <span>Mouse</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            id="tab-versions"
-            aria-selected={showVersions}
-            aria-expanded={showVersions}
-            className={`dock-tab${showVersions ? ' is-active' : ''}`}
-            onClick={() => setShowVersions((prev) => !prev)}
-            title={`Clack v${state.version} release notes`}
-          >
-            <VersionIcon />
-            <span>Release</span>
-            <span className="dock-badge">v{state.version}</span>
-          </button>
-        </div>
-      </div>
 
       <footer>
         <span>{samples} samples</span>

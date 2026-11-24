@@ -210,10 +210,10 @@ function createWindow() {
   const { workAreaSize } = screen.getPrimaryDisplay();
 
   win = new BrowserWindow({
-    width: Math.min(880, workAreaSize.width - 80),
-    height: Math.min(800, workAreaSize.height - 80),
+    width: Math.min(840, workAreaSize.width - 80),
+    height: Math.min(700, workAreaSize.height - 80),
     minWidth: 640,
-    minHeight: 560,
+    minHeight: 540,
     show: false,
     frame: false,
     transparent: false,
