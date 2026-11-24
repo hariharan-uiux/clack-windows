@@ -229,9 +229,9 @@ function createWindow() {
 
   win = new BrowserWindow({
     width: Math.min(840, workAreaSize.width - 80),
-    height: Math.min(700, workAreaSize.height - 80),
+    height: Math.min(670, workAreaSize.height - 80),
     minWidth: 640,
-    minHeight: 540,
+    minHeight: 520,
     show: false,
     frame: false,
     transparent: false,

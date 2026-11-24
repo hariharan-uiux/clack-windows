@@ -97,7 +97,7 @@ ipcMain.handle('open:external', (_event, url) => {
 app.whenReady().then(() => {
   win = new BrowserWindow({
     width: 840,
-    height: 700,
+    height: 670,
     frame: false,
     icon: path.join(root, 'build', 'icon.png'),
     backgroundColor: '#09090b',
