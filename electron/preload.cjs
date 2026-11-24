@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('clack', {
   setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),
   loadSounds: () => ipcRenderer.invoke('sounds:load'),
   windowAction: (action) => ipcRenderer.invoke('window:action', action),
+  openExternal: (url) => ipcRenderer.invoke('open:external', url),
   onKey: (callback) => {
     const handler = (_event, payload) => callback(payload);
     ipcRenderer.on('key:event', handler);
@@ -26,5 +27,10 @@ contextBridge.exposeInMainWorld('clack', {
     const handler = (_event, payload) => callback(payload);
     ipcRenderer.on('mouse:event', handler);
     return () => ipcRenderer.removeListener('mouse:event', handler);
+  },
+  onWheel: (callback) => {
+    const handler = (_event, payload) => callback(payload);
+    ipcRenderer.on('mouse:wheel', handler);
+    return () => ipcRenderer.removeListener('mouse:wheel', handler);
   },
 });

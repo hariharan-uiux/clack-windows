@@ -11,6 +11,7 @@ export interface Settings {
   mouseEnabled: boolean;
   mouseProfile: string;
   mouseUp: boolean;
+  mouseWheel: boolean;
 }
 
 export interface Profile {
@@ -62,13 +63,21 @@ export interface MouseEvent {
   at: number;
 }
 
+export interface WheelEvent {
+  direction: 'up' | 'down';
+  position: number;
+  at: number;
+}
+
 export interface ClackApi {
   getState(): Promise<AppState>;
   setSettings(patch: Partial<Settings>): Promise<AppState>;
   loadSounds(): Promise<SoundLibrary>;
   windowAction(action: 'hide' | 'minimize' | 'close'): Promise<void>;
+  openExternal(url: string): Promise<void>;
   onKey(callback: (event: KeyEvent) => void): () => void;
   onMouse(callback: (event: MouseEvent) => void): () => void;
+  onWheel(callback: (event: WheelEvent) => void): () => void;
   onState(callback: (state: AppState) => void): () => void;
   onDemo(callback: (payload: { profile?: string }) => void): () => void;
 }

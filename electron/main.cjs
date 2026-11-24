@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -15,6 +15,10 @@ app.commandLine.appendSwitch('disable-background-timer-throttling');
 /** Switch profiles mirror the sample packs shipped in `sounds/`. */
 const PROFILES = [
   { id: 'japanese-black', name: 'Japanese Black', brand: 'Cherry MX', note: 'Deep, weighty clack' },
+  { id: 'holy-panda', name: 'Holy Panda', brand: 'Drop + Invyr', note: 'Tactile, deep poppy thock' },
+  { id: 'cherry-blue', name: 'Cherry Blue', brand: 'Cherry MX', note: 'Crisp, sharp clicky snap' },
+  { id: 'buckling-spring', name: 'Buckling Spring', brand: 'IBM Model M', note: 'Metallic ping & heavy clack' },
+  { id: 'topre', name: 'Topre 45g', brand: 'Topre', note: 'Electro-capacitive quiet thud' },
   { id: 'oreo', name: 'Oreo', brand: 'Everglide', note: 'Round, poppy thock' },
   { id: 'crystal-purple', name: 'Crystal Purple', brand: 'Everglide', note: 'Bright, glassy tick' },
   { id: 'cardboard', name: 'Cardboard', brand: 'Flurples', note: 'Dry, papery snap' },
@@ -40,6 +44,7 @@ const DEFAULT_SETTINGS = {
   mouseEnabled: true,
   mouseProfile: 'tactile',
   mouseUp: true,
+  mouseWheel: true,
 };
 
 const soundsRoot = app.isPackaged
@@ -76,6 +81,7 @@ function sanitize(patch) {
   next.launchAtLogin = Boolean(next.launchAtLogin);
   next.mouseEnabled = Boolean(next.mouseEnabled);
   next.mouseUp = Boolean(next.mouseUp);
+  next.mouseWheel = Boolean(next.mouseWheel ?? DEFAULT_SETTINGS.mouseWheel);
   return next;
 }
 
@@ -169,6 +175,7 @@ function startHook() {
 
     uIOhook.on('mousedown', (event) => emitMouse('down', event));
     uIOhook.on('mouseup', (event) => emitMouse('up', event));
+    uIOhook.on('wheel', (event) => emitWheel(event));
 
     uIOhook.start();
     hook = uIOhook;
@@ -204,6 +211,17 @@ function emitMouse(kind, event) {
   win.webContents.send('mouse:event', { kind, label, position, at: Date.now() });
 }
 
+function emitWheel(event) {
+  if (!settings.enabled || !settings.mouseEnabled || !settings.mouseWheel) return;
+  if (!win || win.isDestroyed()) return;
+
+  const { bounds } = screen.getPrimaryDisplay();
+  const position = bounds.width > 0 ? Math.min(1, Math.max(0, (event.x - bounds.x) / bounds.width)) : 0.5;
+  const direction = event.rotation < 0 ? 'up' : 'down';
+
+  win.webContents.send('mouse:wheel', { direction, position, at: Date.now() });
+}
+
 /* ------------------------------------------------------------------ window */
 
 function createWindow() {
@@ -231,6 +249,12 @@ function createWindow() {
   });
 
   win.setMenuBarVisibility(false);
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
 
   if (isDev) {
     win.loadURL(process.env.CLACK_DEV_SERVER);
@@ -302,6 +326,12 @@ function rebuildTray() {
       type: 'checkbox',
       checked: settings.mouseEnabled,
       click: (item) => update({ mouseEnabled: item.checked }),
+    },
+    {
+      label: 'Scroll wheel sounds',
+      type: 'checkbox',
+      checked: settings.mouseWheel,
+      click: (item) => update({ mouseWheel: item.checked }),
     },
     { type: 'separator' },
     {
@@ -383,6 +413,11 @@ ipcMain.handle('window:action', (_event, action) => {
   if (action === 'hide') hideWindow();
   else if (action === 'minimize') minimizeWindow();
   else if (action === 'close') quitApp();
+});
+ipcMain.handle('open:external', (_event, url) => {
+  if (typeof url === 'string' && /^https?:\/\//i.test(url)) {
+    shell.openExternal(url);
+  }
 });
 
 /* ------------------------------------------------------------------- boot */

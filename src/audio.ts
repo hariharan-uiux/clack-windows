@@ -145,6 +145,37 @@ export class ClackEngine {
     source.start();
   }
 
+  /** Play a mouse scroll-wheel ratchet click. */
+  playWheel(direction: 'up' | 'down', position = 0.5) {
+    const ctx = this.ctx;
+    const pack = this.packs['wheel'] ?? this.packs['tactile'];
+    if (!ctx || !pack || !this.master) return;
+    if (ctx.state === 'suspended') void ctx.resume();
+
+    const pool = direction === 'up' ? (pack.up.length ? pack.up : pack.down) : pack.down;
+    if (!pool.length) return;
+
+    const buffer = pool[Math.floor(Math.random() * pool.length)];
+    const pitch = 1 + (Math.random() * 2 - 1) * (this.settings.pitchRange / 100);
+    const pan = (position * 2 - 1) * this.settings.stereoWidth;
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = pitch;
+
+    const voice = ctx.createGain();
+    voice.gain.value = 0.85 * (0.92 + Math.random() * 0.08);
+
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = Math.max(-1, Math.min(1, pan));
+
+    source.connect(voice);
+    voice.connect(panner);
+    panner.connect(this.dry!);
+    panner.connect(this.wet!);
+    source.start();
+  }
+
   /** Peak level 0..1 for the UI meter. */
   level(): number {
     if (!this.analyser || !this.meterBuffer) return 0;

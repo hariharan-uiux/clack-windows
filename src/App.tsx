@@ -111,6 +111,20 @@ function VersionIcon() {
   );
 }
 
+const BUY_ME_A_COFFEE_URL = 'https://buymeacoffee.com/hariofficial';
+
+function CoffeeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+      <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+      <line x1="6" y1="1" x2="6" y2="4" strokeLinecap="round" />
+      <line x1="10" y1="1" x2="10" y2="4" strokeLinecap="round" />
+      <line x1="14" y1="1" x2="14" y2="4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function App() {
   const [state, setState] = useState<AppState | null>(null);
   const [feed, setFeed] = useState<FeedItem[]>([]);
@@ -131,6 +145,7 @@ function App() {
     let disposed = false;
     let unsubscribeKey: (() => void) | undefined;
     let unsubscribeMouse: (() => void) | undefined;
+    let unsubscribeWheel: (() => void) | undefined;
     let unsubscribeState: (() => void) | undefined;
     let unsubscribeDemo: (() => void) | undefined;
 
@@ -177,6 +192,19 @@ function App() {
         pushFeed({ id: feedId.current, label: event.label, pan: event.position, source: 'mouse' });
       });
 
+      unsubscribeWheel = window.clack.onWheel((event) => {
+        const current = engineSettingsRef.current;
+        if (!current || !current.enabled || !current.mouseEnabled || !current.mouseWheel) return;
+        engine.playWheel(event.direction, event.position);
+        feedId.current += 1;
+        pushFeed({
+          id: feedId.current,
+          label: event.direction === 'up' ? '▲ Wheel' : '▼ Wheel',
+          pan: event.position,
+          source: 'mouse',
+        });
+      });
+
       unsubscribeState = window.clack.onState((next) => {
         setState(next);
         engine.setSettings(next.settings);
@@ -193,6 +221,7 @@ function App() {
       disposed = true;
       unsubscribeKey?.();
       unsubscribeMouse?.();
+      unsubscribeWheel?.();
       unsubscribeState?.();
       unsubscribeDemo?.();
     };
@@ -272,16 +301,36 @@ function App() {
       engineRef.current?.play('up', current.mouseProfile, position);
     };
 
+    const handleWheel = (e: WheelEvent) => {
+      const current = engineSettingsRef.current;
+      if (!current || !current.enabled || !current.mouseEnabled || !current.mouseWheel) return;
+      const position = window.innerWidth > 0 ? Math.max(0, Math.min(1, e.clientX / window.innerWidth)) : 0.5;
+      const direction = e.deltaY < 0 ? 'up' : 'down';
+      engineRef.current?.playWheel(direction, position);
+      feedId.current += 1;
+      setFeed((prev) => [
+        {
+          id: feedId.current,
+          label: direction === 'up' ? '▲ Wheel' : '▼ Wheel',
+          pan: position,
+          source: 'mouse' as const,
+        },
+        ...prev,
+      ].slice(0, 14));
+    };
+
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('wheel', handleWheel, { passive: true });
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('wheel', handleWheel);
     };
   }, [state?.state.hook]);
 
@@ -373,6 +422,23 @@ function App() {
         </div>
 
         <div className="topbar-actions">
+          <button
+            type="button"
+            className="coffee-btn"
+            onClick={() => {
+              if (window.clack?.openExternal) {
+                window.clack.openExternal(BUY_ME_A_COFFEE_URL);
+              } else {
+                window.open(BUY_ME_A_COFFEE_URL, '_blank', 'noopener,noreferrer');
+              }
+            }}
+            title="Buy Me a Coffee (https://buymeacoffee.com/hariofficial)"
+            aria-label="Buy Me a Coffee"
+          >
+            <CoffeeIcon />
+            <span>Buy Me a Coffee</span>
+          </button>
+
           <div className="topbar-toggle" ref={dockRef} role="tablist" aria-label="Audio target and release">
             <button
               type="button"
@@ -600,6 +666,12 @@ function App() {
                   hint="Separate up-stroke click"
                   on={settings.mouseUp}
                   onChange={(mouseUp) => void patch({ mouseUp })}
+                />
+                <Toggle
+                  label="Scroll wheel"
+                  hint="Ratchet audio on wheel rotation"
+                  on={settings.mouseWheel}
+                  onChange={(mouseWheel) => void patch({ mouseWheel })}
                 />
               </>
             )}

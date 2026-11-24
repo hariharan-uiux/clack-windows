@@ -7,13 +7,17 @@
  * Useful for UI work and screenshots on any platform. Not part of the app.
  *   npm run preview
  */
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
 const root = path.join(__dirname, '..');
 const profiles = [
   { id: 'japanese-black', name: 'Japanese Black', brand: 'Cherry MX', note: 'Deep, weighty clack' },
+  { id: 'holy-panda', name: 'Holy Panda', brand: 'Drop + Invyr', note: 'Tactile, deep poppy thock' },
+  { id: 'cherry-blue', name: 'Cherry Blue', brand: 'Cherry MX', note: 'Crisp, sharp clicky snap' },
+  { id: 'buckling-spring', name: 'Buckling Spring', brand: 'IBM Model M', note: 'Metallic ping & heavy clack' },
+  { id: 'topre', name: 'Topre 45g', brand: 'Topre', note: 'Electro-capacitive quiet thud' },
   { id: 'oreo', name: 'Oreo', brand: 'Everglide', note: 'Round, poppy thock' },
   { id: 'crystal-purple', name: 'Crystal Purple', brand: 'Everglide', note: 'Bright, glassy tick' },
   { id: 'cardboard', name: 'Cardboard', brand: 'Flurples', note: 'Dry, papery snap' },
@@ -37,6 +41,7 @@ const settings = {
   mouseEnabled: true,
   mouseProfile: 'tactile',
   mouseUp: true,
+  mouseWheel: true,
 };
 
 const state = {
@@ -83,6 +88,11 @@ ipcMain.handle('settings:set', (_event, patch) => {
 });
 ipcMain.handle('sounds:load', () => sounds());
 ipcMain.handle('window:action', () => app.quit());
+ipcMain.handle('open:external', (_event, url) => {
+  if (typeof url === 'string' && /^https?:\/\//i.test(url)) {
+    shell.openExternal(url);
+  }
+});
 
 app.whenReady().then(() => {
   win = new BrowserWindow({
@@ -96,6 +106,13 @@ app.whenReady().then(() => {
       contextIsolation: true,
       backgroundThrottling: false,
     },
+  });
+  win.setMenuBarVisibility(false);
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
   });
   win.loadFile(path.join(root, 'dist', 'index.html'));
 

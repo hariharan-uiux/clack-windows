@@ -36,6 +36,10 @@ const PACKS = {
     // barely there
     body: 1900, q: 4, tick: 0.003, thump: 160, thumpDecay: 0.012, level: 0.4, release: 0.5,
   },
+  wheel: {
+    // mechanical ratchet scroll detent
+    body: 3400, q: 4.8, tick: 0.0035, thump: 290, thumpDecay: 0.009, level: 0.72, release: 0.85,
+  },
 };
 
 const TAKES = { down: 4, up: 3 };
