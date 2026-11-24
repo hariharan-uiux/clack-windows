@@ -323,7 +323,7 @@ function rebuildTray() {
         type: 'radio',
         checked: settings.mouseProfile === profile.id,
         click: () => {
-          update({ mouseProfile: profile.id, mouseEnabled: true });
+          update({ mouseProfile: profile.id, mouseEnabled: true, enabled: true });
           if (win && !win.isDestroyed()) win.webContents.send('sound:demo', { profile: profile.id });
         },
       })),

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ClackEngine } from './audio';
 import { RELEASES } from './changelog';
-import { keyName, keyPosition } from './keymap';
+import { domCodeToKeycode, keyName, keyPosition } from './keymap';
 import type { AppState, Profile, Settings } from './types';
 import './styles.css';
 
@@ -201,6 +201,78 @@ function App() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
+  useEffect(() => {
+    // When the global OS input hook is unavailable, fall back to in-window DOM events
+    // so keystrokes and mouse clicks inside the focused Clack window still produce sound.
+    if (state?.state.hook === 'running') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const current = engineSettingsRef.current;
+      if (!current || !current.enabled || e.repeat) return;
+      const keycode = domCodeToKeycode(e.code);
+      engineRef.current?.play('down', current.profile, keyPosition(keycode));
+      feedId.current += 1;
+      setFeed((prev) => [
+        {
+          id: feedId.current,
+          label: keyName(keycode),
+          pan: keyPosition(keycode),
+          source: 'keyboard' as const,
+        },
+        ...prev,
+      ].slice(0, 14));
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const current = engineSettingsRef.current;
+      if (!current || !current.enabled || !current.keyUp) return;
+      const keycode = domCodeToKeycode(e.code);
+      engineRef.current?.play('up', current.profile, keyPosition(keycode));
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      const current = engineSettingsRef.current;
+      if (!current || !current.enabled || !current.mouseEnabled) return;
+      const buttons: Record<number, string> = { 0: 'LEFT', 1: 'MIDDLE', 2: 'RIGHT' };
+      const label = buttons[e.button];
+      if (!label) return;
+      const position = window.innerWidth > 0 ? Math.max(0, Math.min(1, e.clientX / window.innerWidth)) : 0.5;
+      engineRef.current?.play('down', current.mouseProfile, position);
+      feedId.current += 1;
+      setFeed((prev) => [
+        {
+          id: feedId.current,
+          label,
+          pan: position,
+          source: 'mouse' as const,
+        },
+        ...prev,
+      ].slice(0, 14));
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      const current = engineSettingsRef.current;
+      if (!current || !current.enabled || !current.mouseEnabled || !current.mouseUp) return;
+      const buttons: Record<number, string> = { 0: 'LEFT', 1: 'MIDDLE', 2: 'RIGHT' };
+      const label = buttons[e.button];
+      if (!label) return;
+      const position = window.innerWidth > 0 ? Math.max(0, Math.min(1, e.clientX / window.innerWidth)) : 0.5;
+      engineRef.current?.play('up', current.mouseProfile, position);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [state?.state.hook]);
+
   async function patch(next: Partial<Settings>) {
     if (!state) return;
     const optimistic = { ...state, settings: { ...state.settings, ...next } };
@@ -235,7 +307,7 @@ function App() {
   async function selectProfile(id: string) {
     if (!state) return;
     if (keyboardTab) await patch({ profile: id, enabled: true });
-    else await patch({ mouseProfile: id, mouseEnabled: true });
+    else await patch({ mouseProfile: id, mouseEnabled: true, enabled: true });
     engineRef.current?.preview(id);
   }
 
@@ -249,7 +321,7 @@ function App() {
     <div className="app">
       <header className="titlebar">
         <div className="brand">
-          <img src="/icon.png" alt="Clack" className="brand-icon" />
+          <img src="./icon.png" alt="Clack" className="brand-icon" />
           <span className={`dot${enabled ? ' is-live' : ''}`} />
           <span className="brand-name">CLACK</span>
           <span className="brand-sub">keyboard + mouse audio</span>

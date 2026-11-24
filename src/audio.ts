@@ -125,8 +125,9 @@ export class ClackEngine {
   /** Play one sample from a specific profile without switching to it. */
   preview(profileId: string) {
     const pack = this.packs[profileId];
-    if (!pack || !this.ctx) return;
+    if (!pack || !this.ctx || !this.dry || !this.wet) return;
     const ctx = this.ctx;
+    if (ctx.state === 'suspended') void ctx.resume();
     const pool = pack.down;
     if (!pool.length) return;
 
