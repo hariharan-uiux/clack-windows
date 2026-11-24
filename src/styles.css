@@ -215,25 +215,39 @@ button {
 .window-actions {
   -webkit-app-region: no-drag;
   display: flex;
+  align-items: center;
   gap: 2px;
+  padding: 2px 3px;
+  border: 1px solid var(--line);
+  background: rgba(14, 14, 18, 0.95);
 }
 
 .window-actions button {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 28px;
-  color: var(--muted);
-  transition: background 120ms ease, color 120ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+  color: var(--dim);
+  border: 1px solid transparent;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 
 .window-actions button:hover {
-  background: var(--line);
+  background: #181820;
+  border-color: var(--line);
   color: var(--fg);
 }
 
 .window-actions button:last-child:hover {
-  background: #7f1d1d;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+.window-actions button:focus-visible {
+  outline: 1px solid var(--live);
+  outline-offset: 1px;
 }
 
 /* -------------------------------------------------------------------- main */
