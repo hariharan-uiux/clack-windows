@@ -714,7 +714,28 @@ input[type='range']:hover::-webkit-slider-thumb {
   flex-direction: column;
   align-items: center;
   margin: 8px 0 2px;
-  z-index: 20;
+  z-index: 40;
+}
+
+/* ---------------------------------------------------------- dock backdrop */
+
+.dock-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 8, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 30;
+  animation: backdrop-fade-in 140ms ease-out;
+}
+
+@keyframes backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .dock {

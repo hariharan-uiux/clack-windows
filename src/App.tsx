@@ -604,6 +604,14 @@ function App() {
         </section>
       </main>
 
+      {showVersions && (
+        <div
+          className="dock-backdrop"
+          onClick={() => setShowVersions(false)}
+          aria-hidden="true"
+        />
+      )}
+
       <div className="dock-container">
         {showVersions && (
           <div
