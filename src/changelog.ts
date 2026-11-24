@@ -8,6 +8,20 @@ export interface ReleaseNote {
 /** Newest first. Add an entry here whenever `package.json` version changes. */
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '1.3.1',
+    date: '2026-11-24',
+    changes: [
+      'Bottom floating bar now features a dedicated Release tab displaying the active version with quick access.',
+      'Interactive floating release notes popover displaying changelogs and past version history on click.',
+      'Soft-focus backdrop blur effect (3px blur with 38% dark overlay) behind the release popover when open.',
+      'Selecting a mouse sound pack from the dock UI or tray menu now unpauses the master switch automatically.',
+      'In-window DOM input fallback enables keyboard and mouse audio feedback when the global OS hook is unavailable.',
+      'Mapped keycodes 3675 & 3676 (Left and Right Windows keys) to display "Win" with spatial stereo placement.',
+      'Fixed title bar brand icon asset resolution under Electron file protocol.',
+      'AudioContext automatically resumes playback when auditioning sound profiles in preview mode.',
+    ],
+  },
+  {
     version: '1.3.0',
     date: '2026-11-23',
     changes: [
