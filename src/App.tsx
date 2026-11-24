@@ -102,16 +102,28 @@ function MouseIcon() {
   );
 }
 
+function VersionIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.1">
+      <path d="M2.5 8.5L8.5 2.5H13.5V7.5L7.5 13.5L2.5 8.5Z" strokeLinejoin="round" />
+      <circle cx="10.5" cy="5.5" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
 function App() {
   const [state, setState] = useState<AppState | null>(null);
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [engineError, setEngineError] = useState<string | null>(null);
   const [samples, setSamples] = useState(0);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
+  const [showVersions, setShowVersions] = useState(false);
   const [tab, setTab] = useState<Tab>('keyboard');
   const engineRef = useRef<ClackEngine | null>(null);
   const meterRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
   const feedId = useRef(0);
   const engineSettingsRef = useRef<Settings | null>(null);
 
@@ -272,6 +284,39 @@ function App() {
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [state?.state.hook]);
+
+  useEffect(() => {
+    if (!showVersions) return;
+
+    const handlePointerDown = (e: MouseEvent) => {
+      const target = e.target;
+      if (!(target instanceof Node)) {
+        setShowVersions(false);
+        return;
+      }
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(target) &&
+        dockRef.current &&
+        !dockRef.current.contains(target)
+      ) {
+        setShowVersions(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowVersions(false);
+      }
+    };
+
+    window.addEventListener('mousedown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showVersions]);
 
   async function patch(next: Partial<Settings>) {
     if (!state) return;
@@ -559,31 +604,109 @@ function App() {
         </section>
       </main>
 
-      <div className="dock" role="tablist" aria-label="Sound settings target">
-        <button
-          type="button"
-          role="tab"
-          id="tab-keyboard"
-          aria-selected={keyboardTab}
-          aria-controls="panel-keyboard"
-          className={`dock-tab${keyboardTab ? ' is-active' : ''}`}
-          onClick={() => changeTab('keyboard')}
-        >
-          <KeyboardIcon />
-          <span>Keyboard</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="tab-mouse"
-          aria-selected={!keyboardTab}
-          aria-controls="panel-mouse"
-          className={`dock-tab${!keyboardTab ? ' is-active' : ''}`}
-          onClick={() => changeTab('mouse')}
-        >
-          <MouseIcon />
-          <span>Mouse</span>
-        </button>
+      <div className="dock-container">
+        {showVersions && (
+          <div
+            className="dock-popover"
+            ref={popoverRef}
+            role="dialog"
+            aria-label="Release notes"
+          >
+            <div className="dock-popover-head">
+              <div className="dock-popover-title">
+                <VersionIcon />
+                <span>RELEASE NOTES</span>
+                <span className="dock-badge">v{state.version}</span>
+              </div>
+              <button
+                type="button"
+                className="dock-popover-close"
+                onClick={() => setShowVersions(false)}
+                aria-label="Close release notes"
+                title="Close release notes"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10">
+                  <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.2" />
+                </svg>
+              </button>
+            </div>
+            <div className="versions">
+              <div className="version-picker" role="tablist" aria-label="Releases">
+                {RELEASES.map((item) => (
+                  <button
+                    key={item.version}
+                    type="button"
+                    role="tab"
+                    aria-selected={item.version === release.version}
+                    className={`version-tab${item.version === release.version ? ' is-active' : ''}`}
+                    onClick={() => setSelectedVersion(item.version)}
+                  >
+                    <span className="version-number">v{item.version}</span>
+                    <span className="version-date">{item.date ?? 'Unreleased'}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="version-body" role="tabpanel" aria-label={`Changes in Clack ${release.version}`}>
+                <div className="version-title">
+                  <span>Clack {release.version}</span>
+                  {release.version === state.version && <span className="badge">RUNNING</span>}
+                </div>
+                <ul className="changes">
+                  {release.changes.map((change) => (
+                    <li key={change}>{change}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="dock" ref={dockRef} role="tablist" aria-label="Sound settings and releases">
+          <button
+            type="button"
+            role="tab"
+            id="tab-keyboard"
+            aria-selected={keyboardTab && !showVersions}
+            aria-controls="panel-keyboard"
+            className={`dock-tab${keyboardTab && !showVersions ? ' is-active' : ''}`}
+            onClick={() => {
+              setShowVersions(false);
+              changeTab('keyboard');
+            }}
+          >
+            <KeyboardIcon />
+            <span>Keyboard</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="tab-mouse"
+            aria-selected={!keyboardTab && !showVersions}
+            aria-controls="panel-mouse"
+            className={`dock-tab${!keyboardTab && !showVersions ? ' is-active' : ''}`}
+            onClick={() => {
+              setShowVersions(false);
+              changeTab('mouse');
+            }}
+          >
+            <MouseIcon />
+            <span>Mouse</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="tab-versions"
+            aria-selected={showVersions}
+            aria-expanded={showVersions}
+            className={`dock-tab${showVersions ? ' is-active' : ''}`}
+            onClick={() => setShowVersions((prev) => !prev)}
+            title={`Clack v${state.version} release notes`}
+          >
+            <VersionIcon />
+            <span>Release</span>
+            <span className="dock-badge">v{state.version}</span>
+          </button>
+        </div>
       </div>
 
       <footer>
