@@ -567,41 +567,6 @@ function App() {
             )}
           </div>
         </section>
-
-        <section className="panel">
-          <div className="panel-head">
-            <span>VERSIONS</span>
-            <span className="panel-note">pick a release to see what changed</span>
-          </div>
-          <div className="versions">
-            <div className="version-picker" role="tablist" aria-label="Releases">
-              {RELEASES.map((item) => (
-                <button
-                  key={item.version}
-                  type="button"
-                  role="tab"
-                  aria-selected={item.version === release.version}
-                  className={`version-tab${item.version === release.version ? ' is-active' : ''}`}
-                  onClick={() => setSelectedVersion(item.version)}
-                >
-                  <span className="version-number">v{item.version}</span>
-                  <span className="version-date">{item.date ?? 'Unreleased'}</span>
-                </button>
-              ))}
-            </div>
-            <div className="version-body" role="tabpanel" aria-label={`Changes in Clack ${release.version}`}>
-              <div className="version-title">
-                <span>Clack {release.version}</span>
-                {release.version === state.version && <span className="badge">RUNNING</span>}
-              </div>
-              <ul className="changes">
-                {release.changes.map((change) => (
-                  <li key={change}>{change}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
       </main>
 
       {showVersions && (
